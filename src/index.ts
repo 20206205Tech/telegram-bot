@@ -1,50 +1,62 @@
 import { ApiException, fromHono } from "chanfana";
 import { Hono } from "hono";
-import { tasksRouter } from "./endpoints/tasks/router";
 import { ContentfulStatusCode } from "hono/utils/http-status";
-import { DummyEndpoint } from "./endpoints/dummyEndpoint";
+import { TestEndpoint } from "./endpoints/test";
+import { WebhookDopplerEndpoint } from "./endpoints/webhookDoppler";
+import { WebhookGithubEndpoint } from "./endpoints/webhookGithub";
 
-// Start a Hono app
+// ==================== HONO APP ====================
 const app = new Hono<{ Bindings: Env }>();
 
+// Global error handler
 app.onError((err, c) => {
-	if (err instanceof ApiException) {
-		// If it's a Chanfana ApiException, let Chanfana handle the response
-		return c.json(
-			{ success: false, errors: err.buildResponse() },
-			err.status as ContentfulStatusCode,
-		);
-	}
+  if (err instanceof ApiException) {
+    return c.json(
+      { success: false, errors: err.buildResponse() },
+      err.status as ContentfulStatusCode,
+    );
+  }
 
-	console.error("Global error handler caught:", err); // Log the error if it's not known
+  console.error("Global error handler caught:", err);
 
-	// For other errors, return a generic 500 response
-	return c.json(
-		{
-			success: false,
-			errors: [{ code: 7000, message: "Internal Server Error" }],
-		},
-		500,
-	);
+  return c.json(
+    {
+      success: false,
+      errors: [{ code: 7000, message: "Internal Server Error" }],
+    },
+    500,
+  );
 });
 
-// Setup OpenAPI registry
+// ==================== OPENAPI REGISTRY ====================
 const openapi = fromHono(app, {
-	docs_url: "/",
-	schema: {
-		info: {
-			title: "My Awesome API",
-			version: "2.0.0",
-			description: "This is the documentation for my awesome API.",
-		},
-	},
+  docs_url: "/",
+  schema: {
+    info: {
+      title: "GitHub & Doppler Webhook to Telegram API",
+      version: "1.1.0",
+      description: `
+Settings được quản lý thủ công trong Cloudflare D1 Database:
+- \`WEBHOOK_GITHUB_SECRET\` - GitHub webhook secret (HMAC-SHA256)
+- \`WEBHOOK_DOPPLER_SECRET\` - Doppler webhook secret (Bearer token)
+- \`TELEGRAM_BOT_TOKEN\` - Telegram bot token
+- \`TELEGRAM_CHAT_ID_GITHUB\` - Telegram chat ID cho GitHub notifications
+- \`TELEGRAM_CHAT_ID_DOPPLER\` - Telegram chat ID cho Doppler notifications
+      `,
+    },
+  },
 });
 
-// Register Tasks Sub router
-openapi.route("/tasks", tasksRouter);
+// ==================== REGISTER ROUTES ====================
 
-// Register other endpoints
-openapi.post("/dummy/:slug", DummyEndpoint);
+// GitHub Webhook (POST /webhook)
+openapi.post("/webhook/github", WebhookGithubEndpoint);
 
-// Export the Hono app
+// Doppler Webhook (POST /webhook/doppler)
+openapi.post("/webhook/doppler", WebhookDopplerEndpoint);
+
+// Test endpoint (POST /api/test)
+openapi.post("/api/test", TestEndpoint);
+
+// ==================== EXPORT ====================
 export default app;
