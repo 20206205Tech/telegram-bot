@@ -1,0 +1,16 @@
+{
+	"compatibility_date": "2025-10-08",
+	"main": "src/index.ts",
+	"name": "telegram-bot",
+	"upload_source_maps": true,
+	"observability": {
+		"enabled": true
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "telegram-bot-db",
+			"database_id": "87351582-2e57-4c4b-b660-3f5a4104e38e"
+		}
+	]
+}
