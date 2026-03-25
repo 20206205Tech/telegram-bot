@@ -130,6 +130,7 @@ Webhook phải có chữ ký HMAC-SHA256 hợp lệ trong header \`X-Hub-Signatu
           message =
             `⚙️ <b>CI/CD STARTED</b>\n` +
             `━━━━━━━━━━━━━━━━━━\n` +
+            `🆔 <b>Run ID:</b> <code>${run.id}</code>\n` +
             `🛠 <b>Workflow:</b> <code>${workflowName}</code>\n` +
             `📦 <b>Repo:</b> ${repoLink}\n` +
             `🌿 <b>Branch:</b> <code>${run.head_branch}</code>\n\n` +
@@ -142,6 +143,7 @@ Webhook phải có chữ ký HMAC-SHA256 hợp lệ trong header \`X-Hub-Signatu
           message =
             `${statusIcon} <b>CI/CD ${statusText}</b>\n` +
             `━━━━━━━━━━━━━━━━━━\n` +
+            `🆔 <b>Run ID:</b> <code>${run.id}</code>\n` +
             `🛠 <b>Workflow:</b> <code>${workflowName}</code>\n` +
             `📦 <b>Repo:</b> ${repoLink}\n` +
             `🌿 <b>Branch:</b> <code>${run.head_branch}</code>\n\n` +
