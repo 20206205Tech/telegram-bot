@@ -90,21 +90,24 @@ Hỗ trợ các events:
         const updated: string[] = diff?.updated || [];
         const removed: string[] = diff?.removed || [];
 
-        const diffLines: string[] = [];
-        if (added.length)
-          diffLines.push(`➕ <b>Added:</b> <code>${added.join(", ")}</code>`);
-        if (updated.length)
-          diffLines.push(
-            `✏️ <b>Updated:</b> <code>${updated.join(", ")}</code>`,
-          );
-        if (removed.length)
-          diffLines.push(
-            `🗑 <b>Removed:</b> <code>${removed.join(", ")}</code>`,
-          );
+        // Gom tất cả thay đổi vào 1 mảng duy nhất và kèm icon để không bị tách quá nhiều khối
+        const allChanges = [
+          ...added.map((k: string) => `➕ ${k}`),
+          ...updated.map((k: string) => `✏️ ${k}`),
+          ...removed.map((k: string) => `🗑 ${k}`)
+        ];
 
-        const diffText = diffLines.length
-          ? diffLines.join("\n")
-          : "No changes detected";
+        // Nếu thực sự không có biến nào thay đổi thì kết thúc sớm, không gửi thông báo
+        if (allChanges.length === 0) {
+          return c.json({ success: true, message: "No actual secret changes. Skipped." });
+        }
+
+        let diffText = `<b>Changes:</b> <code>${allChanges.join(", ")}</code>`;
+
+        // Giới hạn độ dài để đảm bảo LUÔN chỉ gửi 1 tin nhắn Telegram duy nhất
+        if (diffText.length > 3500) {
+          diffText = diffText.substring(0, 3500) + "...</code> (đã cắt bớt do quá dài)";
+        }
 
         message =
           `🔐 <b>DOPPLER SECRETS UPDATED</b>\n` +
