@@ -76,6 +76,7 @@ Webhook phải có chữ ký HMAC-SHA256 hợp lệ trong header \`X-Hub-Signatu
       const repoLink = `<a href="${repoUrl}">${repoName}</a>`;
 
       let message = "";
+      let isFailedWorkflow = false; // Biến cờ kiểm tra CI/CD thất bại
 
       // 1. PULL REQUEST
       if (event === "pull_request") {
@@ -140,6 +141,11 @@ Webhook phải có chữ ký HMAC-SHA256 hợp lệ trong header \`X-Hub-Signatu
           const statusIcon = isSuccess ? "✅" : "❌";
           const statusText = isSuccess ? "SUCCESS" : "FAILED";
 
+          // Cập nhật trạng thái thất bại
+          if (!isSuccess) {
+            isFailedWorkflow = true;
+          }
+
           message =
             `${statusIcon} <b>CI/CD ${statusText}</b>\n` +
             `━━━━━━━━━━━━━━━━━━\n` +
@@ -162,7 +168,14 @@ Webhook phải có chữ ký HMAC-SHA256 hợp lệ trong header \`X-Hub-Signatu
           "TELEGRAM_CHAT_ID_GITHUB",
           c.env,
         );
+
+        // Gửi thông báo đến Group mặc định
         await sendToTelegram(botToken, chatId, message);
+
+        // Gửi thêm cảnh báo nếu quy trình CI/CD thất bại
+        if (isFailedWorkflow) {
+          await sendToTelegram(botToken, "-5101056554", message);
+        }
       }
 
       return c.json({ success: true });
